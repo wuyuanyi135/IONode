@@ -12,18 +12,37 @@ template <typename T>
 class PropertyNode : public Node {
  protected:
   T prop;
+  bool readOnly{false};
   std::function<bool(T new_value)> validator;
   std::function<void(T, T)> updateCallback;
+  std::function<bool()> getCallback;
 
  public:
-  PropertyNode(const std::string &name, T prop) : Node(name), prop(prop) {}
+  PropertyNode(const std::string &name, T prop, bool readOnly = false)
+      : Node(name), prop(prop), readOnly(readOnly) {}
 
   void set_validator(const std::function<bool(T)> &validator);
 
   void set_update_callback(const std::function<void(T, T)> &cb);
+  ///
+  /// \param cb should return true if the cached property should be sent to the
+  /// interfaced. Otherwise, it will be suppressed, and it is user's duty to
+  /// send the GET responses by using push_command
+  void set_get_callback(const std::function<bool()> &cb);
 
   T &get_value();
+
+  /// Set value from API interface. Do not trigger update.
+  /// \param newValue
   void set_value(T &newValue);
+
+  /// Notify async GET task done
+  void notify_get_request_completed();
+  void notify_get_request_completed(T &val);
+
+  /// Return the underlying pointer of the props. Will not trigger any callback.
+  /// \return
+  T *data();
 
  protected:
   void on_command(std::vector<std::string> &args) override;
@@ -31,6 +50,7 @@ class PropertyNode : public Node {
   virtual bool on_validation(T &newValue);
 
   virtual void on_property_updated(T &oldValue, T &newValue);
+  virtual bool on_property_get();
 
   virtual void on_get();
 
@@ -67,17 +87,22 @@ T &PropertyNode<T>::get_value() {
 
 template <typename T>
 void PropertyNode<T>::set_value(T &newValue) {
-  on_property_updated(prop, newValue);
   prop = newValue;
 }
 
 template <typename T>
 void PropertyNode<T>::on_get() {
-  push_message("GET", to_string(prop));
+  if (on_property_get()) {
+    push_message("GET", to_string(prop));
+  }
 }
 
 template <typename T>
 void PropertyNode<T>::on_set(std::string newValue) {
+  if (readOnly) {
+    // Read only Node should ignore the topic update to prevent publishing echo.
+    return;
+  }
   T v = from_string(newValue);
   if (on_validation(v)) {
     T oldValue = prop;
@@ -134,6 +159,30 @@ T PropertyNode<T>::from_string(std::string &str) {
   T value;
   convert >> value;
   return value;
+}
+template <typename T>
+bool PropertyNode<T>::on_property_get() {
+  if (getCallback) {
+    return getCallback();
+  } else {
+    return true;
+  }
+}
+template <typename T>
+void PropertyNode<T>::set_get_callback(const std::function<bool()> &cb) {
+  getCallback = cb;
+}
+template <typename T>
+T *PropertyNode<T>::data() {
+  return &prop;
+}
+template <typename T>
+void PropertyNode<T>::notify_get_request_completed(T &val) {
+  push_message("GET", to_string(val));
+}
+template <typename T>
+void PropertyNode<T>::notify_get_request_completed() {
+  notify_get_request_completed(prop);
 }
 
 #endif  // IOPROPERTYNODE_H

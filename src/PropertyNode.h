@@ -5,8 +5,8 @@
 #ifndef IOPROPERTYNODE_H
 #define IOPROPERTYNODE_H
 
-#include <sstream>
 #include "IONode.h"
+#include <sstream>
 
 template<typename T>
 class PropertyNode : public Node {
@@ -16,10 +16,19 @@ protected:
     std::function<bool(T new_value)> validator;
     std::function<void(T, T)> updateCallback;
     std::function<bool()> getCallback;
+    bool publishOnRegistered{false};
 
 public:
-    PropertyNode(const std::string &name, T prop, bool readOnly = false)
-            : Node(name), prop(prop), readOnly(readOnly) {}
+    int register_interface(IOInterface &interface) override;
+
+public:
+    ///
+    /// \param name
+    /// \param prop
+    /// \param readOnly
+    /// \param publishOnRegistered announce the initial topic and value when registered.
+    PropertyNode(const std::string &name, T prop, bool readOnly = false, bool publishOnRegistered = false)
+        : Node(name), prop(prop), readOnly(readOnly), publishOnRegistered(publishOnRegistered) {}
 
     void set_validator(const std::function<bool(T)> &validator);
 
@@ -173,7 +182,7 @@ bool PropertyNode<T>::on_property_get() {
     if (getCallback) {
         return getCallback();
     } else {
-        return true;
+        return prop;
     }
 }
 
@@ -196,5 +205,13 @@ template<typename T>
 void PropertyNode<T>::notify_get_request_completed() {
     notify_get_request_completed(prop);
 }
+template<typename T>
+int PropertyNode<T>::register_interface(IOInterface &interface) {
+    if (publishOnRegistered) {
+        interface.push_message(name, "GET", to_string(prop));
+        delay(50); // TODO: prevent echo
+    }
+    return Node::register_interface(interface);
+}
 
-#endif  // IOPROPERTYNODE_H
+#endif// IOPROPERTYNODE_H

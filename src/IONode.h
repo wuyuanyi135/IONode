@@ -20,7 +20,7 @@ public:
     /// \param access
     explicit Node(std::string name);
 
-    int register_interface(IOInterface &interface);
+    virtual int register_interface(IOInterface &interface);
 
 protected:
     virtual void on_command(std::vector<std::string> &args) = 0;

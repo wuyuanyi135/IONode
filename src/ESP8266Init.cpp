@@ -93,6 +93,10 @@ ESP8266Init::State ESP8266Init::async_init() {
             state = FINISHED;
             break;
 
+        case FINISHED:
+            state = OVERRUN;
+            break;
+
         case OVERRUN:
         case WIFI_FAILED:
         case MQTT_FAILED:

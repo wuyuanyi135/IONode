@@ -28,7 +28,7 @@ public:
     /// \param readOnly
     /// \param publishOnRegistered announce the initial topic and value when registered.
     PropertyNode(const std::string &name, T prop, bool readOnly = false, bool publishOnRegistered = false)
-        : Node(name), prop(prop), readOnly(readOnly), publishOnRegistered(publishOnRegistered) {}
+            : Node(name), prop(prop), readOnly(readOnly), publishOnRegistered(publishOnRegistered) {}
 
     void set_validator(const std::function<bool(T)> &validator);
 
@@ -205,11 +205,11 @@ template<typename T>
 void PropertyNode<T>::notify_get_request_completed() {
     notify_get_request_completed(prop);
 }
+
 template<typename T>
 int PropertyNode<T>::register_interface(IOInterface &interface) {
     if (publishOnRegistered) {
         interface.push_message(name, "GET", to_string(prop));
-        delay(50); // TODO: prevent echo
     }
     return Node::register_interface(interface);
 }

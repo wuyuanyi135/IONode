@@ -11,6 +11,9 @@
 /// This interface interacts with MQTT broker. To read, write empty message to
 /// the topic. For the apps listening to this topic, remember to filter out
 /// those empty messages.
+
+#define SAME_TOPIC_ECHO_DEBOUNCE_TIME 300
+
 class PubSubClientInterface : public IOInterface {
  protected:
   PubSubClient &_client;
@@ -19,6 +22,7 @@ class PubSubClientInterface : public IOInterface {
   bool _topicCached = false;
   bool _retained;
   std::unordered_map<std::string, IOInterfaceCallback> _cbMap;
+  std::unordered_map<std::string, uint64_t> publishedAt;
 
  protected:
   virtual std::string get_topic(std::string topic);

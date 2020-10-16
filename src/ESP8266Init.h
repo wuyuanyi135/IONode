@@ -31,10 +31,10 @@ protected:
     const char *mqttServer;
     int mqttPort;
     const char *description;
-    int wifiIntervalMS;
-    int mqttIntervalMS;
-    int wifiTimeoutMS;
-    int mqttTimeoutMS;
+    ulong wifiIntervalMS;
+    ulong mqttIntervalMS;
+    ulong wifiTimeoutMS;
+    ulong mqttTimeoutMS;
     std::string espID;
 
 public:

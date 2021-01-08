@@ -90,6 +90,7 @@ ESP8266Init::State ESP8266Init::async_init() {
         case MQTT_CONNECTED_:
             client.publish((espID + "/desc").c_str(), description, true);
             client.publish((espID + "/status").c_str(), "on", true);
+            client.publish((espID + "/ip").c_str(), WiFi.localIP().toString().c_str(), true);
             state = FINISHED;
             break;
 

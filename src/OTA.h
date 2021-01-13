@@ -9,12 +9,13 @@
 #include <ESP8266WebServer.h>
 class OTA {
 public:
-  explicit OTA(int port = 80);
+  explicit OTA(int port = 80, String name = "");
   void begin();
   void loop();
 private:
   bool initialized{false};
   int port;
+  String name;
   ESP8266WebServer httpServer;
   ESP8266HTTPUpdateServer httpUpdater;
 };
